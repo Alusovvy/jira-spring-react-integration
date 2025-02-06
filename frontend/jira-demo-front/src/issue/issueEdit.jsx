@@ -1,22 +1,19 @@
 import { Form, Button } from 'react-bootstrap';
 import React from 'react';
 import { useEffect, useState } from "react";
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import notificationService from '../service/notificationService';
 
 export default function EditTask() {
+    const navigate = useNavigate();
     const {id, projectId}= useParams();
-    const isEditing = (id && projectId); //ja wiem ze troche przekombinowany hak, ale na szybko juz dodaje te opcje
-    const [issue, setIssue] = useState(null);
+    const isEditing = id > 0; //ja wiem ze troche przekombinowany hak, ale na szybko juz dodaje te opcje
     const [formData, setFormData] = useState({
-        id: '',
-        title: '',
-        project: '',
+        id: projectId,
         assignee: '',
         status: '',
         summary: '',
-        issuetype: ''
+        issuetype: '10002'
       });
       useEffect(() => {
       if (isEditing) {
@@ -26,7 +23,6 @@ export default function EditTask() {
             .then((data) => {
               setFormData({
                 id: data.fields.id,
-                title: data.key,
                 project: data.fields.project.name, 
                 assignee: data.fields.assignee ? data.fields.assignee.displayName : '', 
                 status: data.fields.status.name,
@@ -35,10 +31,10 @@ export default function EditTask() {
             });
             })
             .catch((error) => {
-              notificationService.error(error);
+             console.log(error);
             });
       }
-      }, [id, isEditing, notificationService]); 
+      }, [id, isEditing,]); 
       
 
 
@@ -60,30 +56,58 @@ export default function EditTask() {
                 
             };
             try {
+              console.log(jiraJson);
                 const response = await axios.post(
                   "http://localhost:8080/jira/issue",
                   jiraJson
                 );
-                notificationService.success("Issue was edited!")
+                navigate(`/issues/${projectId}`)
               } catch (error) {
-                notificationService.error(error);
+                console.log(error);
               }
             
           };
+    const editTask = async (e) => {
+      console.log(id);
+      e.preventDefault();
+      const jiraJson = {
+          id: id,
+          fields: 
+              {
+                  status: {
+                      name: formData.status
+                  },
+                  summary: formData.summary,
+                  project: {
+                      id: projectId
+                  },
+                  issuetype: {id: formData.issuetype}
+              }
+          
+      };
+      try {
+        console.log(jiraJson);
+          const response = await axios.put(
+            "http://localhost:8080/jira/issue",
+            jiraJson
+          );
+          navigate(`/issues/${projectId}`)
+        } catch (error) {
+          console.log(error);
+        }
+      
+    };     
         
 
   return (
-    <Form onSubmit={submitIssue} style={{ margin: '50px', width: '50%' }}>
-      <Form.Group className="mb-3" controlId="title">
-        <Form.Label>Task Key</Form.Label>
-        <Form.Control disabled={true} type="text" value={formData.title} />
-      </Form.Group>
+    <Form onSubmit={isEditing ? editTask : submitIssue} style={{ margin: '50px', width: '50%' }}>
       <Form.Group className="mb-3" controlId="project">
-        <Form.Label>Project</Form.Label>
+        <Form.Label>Project Id</Form.Label>
         <Form.Control
+          disabled={true}
           type="text"
           name="project"
-          value={formData.project}
+          value={formData.id}
           onChange={(e) =>
             setFormData({ ...formData, project: e.target.value })
           }
@@ -91,7 +115,7 @@ export default function EditTask() {
       </Form.Group>
       <Form.Group className="mb-3" controlId="assignee">
         <Form.Label>Assignee</Form.Label>
-        <Form.Control disabled={true} type="text" value={formData.assignee} />
+        <Form.Control disabled={true} type="text" value={formData.assignee ? formData.assignee : "None"} />
       </Form.Group>
       <Form.Group className="mb-3" controlId="status">
         <Form.Label>Status</Form.Label>

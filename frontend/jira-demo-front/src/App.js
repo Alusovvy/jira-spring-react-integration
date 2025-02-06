@@ -4,7 +4,6 @@ import  ProjectsPage  from './project/project';
 import Navigation from "./navbar/navbar";
 import IssuesList from './issue/issue';
 import EditTask from './issue/issueEdit';
-import { ToastContainer } from "react-toastify";
 
 
 function App() {

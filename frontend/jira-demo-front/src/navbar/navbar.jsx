@@ -11,7 +11,6 @@ export default function Navigation() {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link href="/projects">Projects</Nav.Link>
-            <Nav.Link href="/logs">Logs</Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Container>

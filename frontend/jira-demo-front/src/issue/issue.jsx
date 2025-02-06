@@ -1,59 +1,41 @@
 import { useEffect, useState } from "react";
 import { useParams } from 'react-router-dom';
 import { ListGroup, Card, Badge, Button, ButtonGroup } from 'react-bootstrap';
-import notificationService from '../service/notificationService';
 import { useNavigate } from 'react-router-dom';
 import SearchIssue from "./issueSearchBar";
+import IssueService from "./IssueService";
 
 export default function IssuesList() {
   const navigate = useNavigate();
-  const {projectName} = useParams();
+  const {projectId} = useParams();
   const [issues, setIssues] = useState([]);
   const [issueFilter, setIssueFilter] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-      fetch(`http://localhost:8080/jira/issues/${projectName}`) 
-        .then((response) => response.json())
-        .then((data) => {
-          setIssues(data || []);
-          setLoading(false);
-        })
-        .catch((error) => {
-          notificationService.error(error);
-          setLoading(false);
-        });
-    }, []);
+    const fetchIssues = async () => {
+        const fetchedIssues = await IssueService.getIssues(projectId); 
+        setIssues(fetchedIssues || []);
+    };
+
+    fetchIssues();
+}, []);
 
     const deleteIssue = async (issueId) => {
-      try {
-          const response = await fetch(`http://localhost:8080/jira/issue/${issueId}`, {
-              method: 'DELETE',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-          });
-  
-          if (response == 204) {
-              notificationService.success(`Issue ${issueId} deleted successfully`);
+          const response = await IssueService.deleteIssue(issueId);
+          console.log(response.status)
+          if (response) {
+            setIssues((prevIssues) => prevIssues.filter((issue) => issue.id !== issueId)); 
           } else {
-            notificationService.error(`Failed to delete issue ${issueId}`);
-          }
-      } catch (error) {
-        notificationService.error("Error deleting issue:", error);
-      }
+            console.log("Issue not deleted");
+          } 
   };
 
-  if (loading) return <p>Loading Issues</p>;
-  if (error) return <p>{error}</p>;
 
   return (
     <>
-    <Button variant="primary" onClick={() => {}}>Add Issue</Button>
+    <Button style={{margin: "15px"}} variant="primary" onClick={() => {navigate(`/issueEdit/${null}/${projectId}`)}}>Add Issue</Button>
     <SearchIssue onSearch={setIssueFilter} />
   <ListGroup>
-
       {issues
       .filter(issue => issue.fields.summary.toLowerCase().includes(issueFilter.toLowerCase()))
       .map(issue => (

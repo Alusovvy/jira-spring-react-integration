@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/jira")
 @AllArgsConstructor
-public class JiraAPIController {
+public class IssueController {
 
     @Autowired
     private final JiraService jiraService;
@@ -36,12 +36,7 @@ public class JiraAPIController {
                 .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()));
     }
 
-    @GetMapping("/projects")
-    public Mono<ResponseEntity<List<Project>>> getProjects() {
-        return jiraService.getProjects()
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()));
-    }
+
 
     @PostMapping("/issue")
     public Mono<ResponseEntity<IssueDto>> addIssue(@RequestBody IssueExternal issueExternal) throws JsonProcessingException {
